@@ -1,5 +1,6 @@
 import time
 import random
+from selenium.common import WebDriverException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
@@ -11,30 +12,34 @@ class Page:
         self.driver = driver
         self.time_out = 30
 
-    def find_element(self, by, selector: str, expected_condition=EC.presence_of_element_located):
+    def get_element(self, by, selector: str, expected_condition=EC.presence_of_element_located):
         locator = by, selector
         return WebDriverWait(self.driver, self.time_out).until(expected_condition(locator))
 
+    def get_elements(self, by, selector, expected_condition=EC.presence_of_element_located):
+        locator = by, selector
+        WebDriverWait(self.driver, self.time_out).until(expected_condition(locator))
+        return self.driver.find_elements(by, selector)
+
     def click_element(self, by, selector: str) -> None:
-        element = self.find_element(by, selector)
+        element = self.get_element(by, selector)
         actions = ActionChains(self.driver)
         actions.click(element).perform()
 
     def fill_element(self, by, selector: str, value: str, clean=False) -> None:
-        element = self.find_element(by, selector, expected_condition=EC.element_to_be_clickable)
+        element = self.get_element(by, selector, expected_condition=EC.element_to_be_clickable)
+        element.click()
+
         if clean:
-            self._clear_input(element)
+            element.clear()
         time.sleep(2)
-        self._insert_value(element, value)
 
-    @staticmethod
-    def _clear_input(elem) -> None:
-        elem.send_keys(Keys.CONTROL + "a")
-        elem.send_keys(Keys.BACKSPACE)
+        element.send_keys(value)
 
-    @staticmethod
-    def _insert_value(elem, value: str) -> None:
-        for char in value:
-            timeout_random = random.randint(20, 40)
-            elem.send_keys(char)
-            time.sleep(timeout_random / 100)
+    def check_is_element_on_page(self, by, selector) -> bool:
+        locator = by, selector
+        try:
+            WebDriverWait(self.driver, self.time_out).until(EC.presence_of_element_located(locator))
+            return True
+        except WebDriverException:
+            return False
