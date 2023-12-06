@@ -7,7 +7,7 @@ class MainPage(Page):
     def __init__(self, driver):
         super().__init__(driver)
 
-    def check_side_bar_elements(self):
+    def check_side_bar_elements(self) -> dict[str, bool | list]:
         self.click_element(By.XPATH, '//*[@resource-id="com.ajaxsystems:id/menuDrawer"]')
         sidebar_elements = self.get_elements(By.XPATH, '//*[@index="0" and @class="android.widget.ScrollView"]/*')
         sidebar_elements_img = self.get_elements(By.XPATH, '//*[@index="0" and @class="android.widget.ScrollView"]'
